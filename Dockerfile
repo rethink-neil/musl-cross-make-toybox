@@ -26,15 +26,3 @@ run \
   && export LDFLAGS="--static" \
   && make defconfig all
 
-
-
-#   && checkinstall \
-#     -y \
-#     --addso=no \
-#     --maintainer=$(whoami)@rethinkrobotics.com \
-#     --pkglicense=BSD \
-#     --pkgname=toybox \
-#     --pkgrelease=1 \
-#     --pkgversion=${VERSION} \
-#     --type=debian \
-#     make install
