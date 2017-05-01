@@ -1,28 +1,26 @@
-FROM alpine
+# musl-cross-make-toybox
 
-RUN \
-  set -euvx \
-  && apk update \
-  && apk add ca-certificates curl make wget
+from alpine
 
-WORKDIR /workdir
+run apk update && apk add alpine-sdk bash
 
-copy . .
+workdir /workdir
 
-run \
-  set -euvx \
-  && ./github-get-latest https://github.com/richfelker/musl-cross-make \
-  && cd musl-cross-make \
-  && echo 'TARGET=x86_64-linux-musl' >config.mak \
-  && make -j$(getconf _NPROCESSORS_ONLN) install
+copy ./github-get-latest .
 
 run \
-  set -euvx \
+  set -eu \
+  && ./github-get-latest https://github.com/richfelker/musl-cross-make
+  && echo 'TARGET=x86_64-linux-musl' >musl-cross-make/config.mak
+  && make -C musl-cross-make -j $(getconf _NPROCESSORS_ONLN) all
+  && make -C musl-cross-make install
+
+run \
+  set -eu \
   && ./github-get-latest https://github.com/landley/toybox \
-  && cd toybox \
   && export CROSS_COMPILE="x86_64-linux-musl-" \
   && export PATH=/workdir/musl-cross-make/output/bin:${PATH} \
   && export CFLAGS="--static" \
   && export LDFLAGS="--static" \
-  && make defconfig all
-
+  && make -C toybox -j $(getconf _NPROCESSORS_ONLN) defconfig all
+  && make -C toybox install
