@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# musl-cross-make-toybox/github-get-latest
+# musl-cross-make-toybox/github-get
 
 set -eu
 
