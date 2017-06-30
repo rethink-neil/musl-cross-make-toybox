@@ -1,6 +1,6 @@
 #!/bin/sh
 
-# musl-cross-make-toybox
+# musl-cross-make-toybox/build
 
 here=$(dirname $(readlink -f ${0}))
 name=$(basename ${here})
@@ -10,8 +10,7 @@ from ubuntu
 run \
   set -euvx \
   && apt-get -y update \
-  && apt-get -y install build-essential curl
-run apt-get -y install wget
+  && apt-get -y install build-essential curl wget
 workdir /workdir
 copy ./github-get-latest .
 run \
