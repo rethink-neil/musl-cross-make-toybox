@@ -2,21 +2,19 @@
 
 # musl-cross-make-toybox/github-get-latest
 
-# take a github project url; download/unpack the latest release
+# take a github project url; download, unpack, and softlink the latest release
 
 set -euvx
 
-export GITHUB_URL=${1}
-export PROJECT=$(basename ${GITHUB_URL})
-
-cd $(mktemp -dt ${PROJECT}.XXXXXX)
-curl -sLO ${GITHUB_URL}/releases
-egrep -o '[^/]+\.tar.gz' releases | sed 's/.tar.gz//' >versions
-export VERSION=$(head -1 versions)
+export GITHUB_URL="${1}"
+export PROJECT="$(basename ${GITHUB_URL})"
+cd $(mktemp -d)
+curl -sL ${GITHUB_URL}/releases \
+    | grep -Eo '[^/]+\.tar\.gz' | sed 's/\.tar\.gz//' | sort -V >versions
+export VERSION=$(tail -1 versions)
 curl -sLo ${PROJECT}_${VERSION}.tar.gz ${GITHUB_URL}/archive/${VERSION}.tar.gz
 tar -xf ${PROJECT}_${VERSION}.tar.gz
-_dir=$(find $(pwd) -mindepth 1 -maxdepth 1 -type d)
-
+untarred_dir=$(find $(pwd) -mindepth 1 -maxdepth 1 -type d)
 cd -
-mv -v ${_dir} .
-ln -vs $(basename ${_dir}) ${PROJECT}
+mv -v ${untarred_dir} .
+ln -vs $(basename ${untarred_dir}) ${PROJECT}
