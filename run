@@ -10,7 +10,7 @@ make -C musl-cross-make -j $(getconf _NPROCESSORS_ONLN) all
 make -C musl-cross-make install
 ./github-get https://github.com/landley/toybox
 export CROSS_COMPILE="x86_64-linux-musl-"
-export PATH=/workdir/musl-cross-make/output/bin:${PATH}
+export PATH=${PWD}/musl-cross-make/output/bin:${PATH}
 export CFLAGS="--static"
 export LDFLAGS="--static"
 make -C toybox defconfig
