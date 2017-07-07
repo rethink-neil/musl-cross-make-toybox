@@ -1,26 +1,12 @@
-# musl-cross-make-toybox
+# musl-cross-make-toybox/Dockerfile
 
-from alpine
-
-run apk update && apk add alpine-sdk bash
-
+from ubuntu
+maintainer Neil Roza <nroza@rethinkrobotics.com>
+env DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true
 workdir /workdir
-
-copy ./github-get .
-
+copy run run
 run \
-  set -eu \
-  && ./github-get https://github.com/richfelker/musl-cross-make \
-  && echo 'TARGET=x86_64-linux-musl' >musl-cross-make/config.mak \
-  && make -C musl-cross-make -j $(getconf _NPROCESSORS_ONLN) all \
-  && make -C musl-cross-make install
-
-run \
-  set -eu \
-  && ./github-get https://github.com/landley/toybox \
-  && export CROSS_COMPILE="x86_64-linux-musl-" \
-  && export PATH=/workdir/musl-cross-make/output/bin:${PATH} \
-  && export CFLAGS="--static" \
-  && export LDFLAGS="--static" \
-  && make -C toybox -j $(getconf _NPROCESSORS_ONLN) defconfig all \
-  && make -C toybox install
+  set -euvx \
+  && apt-get -y update \
+  && apt-get -y install build-essential curl wget \
+  && ./run
