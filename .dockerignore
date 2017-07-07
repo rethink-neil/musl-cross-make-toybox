@@ -4,3 +4,6 @@
 .gitignore
 Dockerfile
 README.md
+github-get
+musl-cross-make*
+toybox*
