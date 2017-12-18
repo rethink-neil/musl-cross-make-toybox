@@ -2,7 +2,74 @@
 
 # musl-cross-make-toybox/build
 
-here=$(dirname $(readlink -f ${0}))
-name=$(basename ${here})
+set -euvx
 
-docker build -t${name} ${here}
+this="$(readlink -f ${0})"
+here="$(dirname ${this})"
+
+usage() {
+    cat << EOF
+Usage: $(basename ${this}) [OPTION]...
+Build musl-cross-make-toybox.
+
+  --raw    build natively (not dockerized)
+
+Example:
+  $(basename ${this}) --raw
+EOF
+}
+
+die() { { echo "ERROR: ${@}"; usage; } >&2; exit 1; }
+warn() { echo "WARNING: ${@}" >&2; }
+
+build_raw() {
+    local workdir=${PWD}
+    curl -LO https://raw.githubusercontent.com/rethink-neil/github-get/master/github-get
+    chmod -v +x github-get
+    ./github-get https://github.com/richfelker/musl-cross-make
+    (
+        cd musl-cross-make
+        tee config.mak <<'EOF'
+TARGET := x86_64-linux-musl
+DL_CMD := curl -C- -Lo
+EOF
+        make -j$(getconf _NPROCESSORS_ONLN) install
+    )
+    ./github-get https://github.com/landley/toybox
+    (
+        cd toybox
+        export CROSS_COMPILE="x86_64-linux-musl-"
+        export PATH=${workdir}/musl-cross-make/output/bin:${PATH}
+        export CFLAGS="--static"
+        export LDFLAGS="--static"
+        make defconfig
+        make -j$(getconf _NPROCESSORS_ONLN) all
+        # PREFIX=/usr/local make -C toybox install
+    )
+}
+
+build_dockerized() {
+    docker build \
+        --force-rm=${DOCKER_BUILD_FORCE_RM:-"false"} \
+        --no-cache=${DOCKER_BUILD_NO_CACHE:-"false"} \
+        --pull=${DOCKER_BUILD_PULL:-"false"} \
+        -t musl-cross-make-toybox ${here}
+
+    docker run -i --rm \
+        --mount type=bind,source=${PWD},target=/mnt/host-volume \
+        --env DOCKER_HOST_UID="$(id -u)" \
+        --env DOCKER_HOST_GID="$(id -g)" \
+        musl-cross-make-toybox sh <<'EOF'
+set -euvx
+pwd
+ls -lah
+EOF
+}
+
+if [ "--raw" = "${1:-}" ]; then
+    shift
+    build_raw ${@}
+    exit ${?}
+fi
+
+build_dockerized ${@}
